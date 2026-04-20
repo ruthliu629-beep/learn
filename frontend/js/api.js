@@ -114,7 +114,35 @@ function _hasLocalVoice(locale) {
   return voices.some(v => v.lang === locale || v.lang.startsWith(prefix + '-') || v.lang === prefix);
 }
 
+// Speed presets. Applied to Web Speech rate AND HTML Audio playbackRate.
+//   slow   = 0.65  — clear pronunciation for beginners
+//   normal = 1.0   — dictionary / native single-word pace
+//   fast   = 1.5   — real human conversation tempo (compresses synthetic pauses)
+const SPEAK_RATE = { slow: 0.65, normal: 1.0, fast: 1.5 };
+
+// Some languages use concatenated per-syllable human recordings (Cantonese from
+// words.hk, Hokkien from MOE Sutian). Each clip carries its own leading/trailing
+// silence, so the assembled audio sounds slower than natural speech. Multiply
+// the playback rate to compensate.
+const LANG_RATE_MULT = {
+  'zh-yue': 1.4,
+  'zh-nan': 1.4,
+};
+
+function _rateFor(options, langCode) {
+  if (typeof options.rate === 'number') return options.rate;
+  const speed = options.speed || 'normal';
+  let base = SPEAK_RATE[speed] || SPEAK_RATE.normal;
+  // Only boost the conversational "fast" and "normal" tempo, not "slow"
+  if (speed !== 'slow' && langCode && LANG_RATE_MULT[langCode]) {
+    base *= LANG_RATE_MULT[langCode];
+  }
+  return base;
+}
+
 function speak(text, langCode, options = {}) {
+  options = { ...options, rate: _rateFor(options, langCode) };
+
   // Hokkien: always via backend MOE — browser never supports it, and MOE is real human voice
   if (langCode === 'zh-nan') {
     return speakViaBackend(text, langCode, options);
@@ -138,14 +166,40 @@ function speak(text, langCode, options = {}) {
   if (_googleAudio) { _googleAudio.pause(); _googleAudio = null; }
   const u = new SpeechSynthesisUtterance(text);
   u.lang = locale;
-  u.rate = options.rate || 0.85;
+  u.rate = options.rate || 1.0;
   u.pitch = options.pitch || 1.0;
   const voice = _pickVoice(locale);
   if (voice) u.voice = voice;
 
-  if (options.onstart) u.onstart = options.onstart;
-  if (options.onend) u.onend = options.onend;
-  if (options.onerror) u.onerror = options.onerror;
+  // Silent-failure guard: some browsers (or voices) report 'has voice' but then
+  // never fire onstart. If nothing starts within 900ms, fall back to backend TTS.
+  let fallbackFired = false;
+  const fallback = setTimeout(() => {
+    if (!u._started && !fallbackFired) {
+      fallbackFired = true;
+      try { speechSynthesis.cancel(); } catch (e) {}
+      speakViaBackend(text, langCode, options);
+    }
+  }, 900);
+
+  u.onstart = (e) => {
+    u._started = true;
+    clearTimeout(fallback);
+    if (options.onstart) options.onstart(e);
+  };
+  u.onend = (e) => {
+    clearTimeout(fallback);
+    if (options.onend) options.onend(e);
+  };
+  u.onerror = (e) => {
+    clearTimeout(fallback);
+    if (!fallbackFired) {
+      fallbackFired = true;
+      speakViaBackend(text, langCode, options);
+    } else if (options.onerror) {
+      options.onerror(e);
+    }
+  };
 
   speechSynthesis.speak(u);
   return true;
@@ -192,7 +246,11 @@ function speakViaBackend(text, langCode, options = {}) {
       return;
     }
     const audio = new Audio(sources[idx]);
-    audio.playbackRate = options.rate || 0.9;
+    audio.playbackRate = options.rate || 1.0;
+    // Keep natural voice pitch when speeding up (no chipmunk effect)
+    audio.preservesPitch = true;
+    audio.mozPreservesPitch = true;
+    audio.webkitPreservesPitch = true;
     _googleAudio = audio;
     if (options.onstart) audio.onplay = () => options.onstart();
     if (options.onend) audio.onended = () => { _googleAudio = null; options.onend && options.onend(); };
@@ -224,7 +282,8 @@ function showHokkienFallbackToast(text) {
 
 // Click-safe button handler: toggle a pulsing animation.
 // romanization (4th arg) is optional — used for Cantonese real-voice synthesis.
-function speakFromButton(btn, text, langCode, romanization) {
+// speed (5th arg): 'normal' (default) or 'slow'.
+function speakFromButton(btn, text, langCode, romanization, speed) {
   if (btn._speaking) {
     try { speechSynthesis.cancel(); } catch (e) {}
     if (_googleAudio) { _googleAudio.pause(); _googleAudio = null; }
@@ -234,6 +293,7 @@ function speakFromButton(btn, text, langCode, romanization) {
   }
   const started = speak(text, langCode, {
     romanization: romanization || undefined,
+    speed: speed || 'normal',
     onstart: () => { btn._speaking = true; btn.classList.add('playing'); },
     onend: () => { btn._speaking = false; btn.classList.remove('playing'); },
     onerror: () => { btn._speaking = false; btn.classList.remove('playing'); },
@@ -241,6 +301,24 @@ function speakFromButton(btn, text, langCode, romanization) {
   if (!started) {
     btn.classList.remove('playing');
   }
+}
+
+// Helper that renders a paired normal+slow speak button group. Use in templates.
+function speakButtonsHTML(text, langCode, romanization, opts = {}) {
+  const size = opts.size || 'md';
+  const sizeClass = size === 'lg' ? 'btn-speak-lg' : (size === 'sm' ? 'btn-speak-sm' : '');
+  const zh = getUILang() === 'zh';
+  const t = String(text || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  const r = String(romanization || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  const stopProp = opts.stopProp ? 'event.stopPropagation(); ' : '';
+  return `
+    <span class="speak-group">
+      <button class="btn-speak ${sizeClass}" title="${zh ? '正常速度' : 'Normal speed'}"
+              onclick="${stopProp}speakFromButton(this, '${t}', '${langCode}', '${r}', 'normal')">🔊</button>
+      <button class="btn-speak ${sizeClass} btn-speak-slow" title="${zh ? '慢速' : 'Slow'}"
+              onclick="${stopProp}speakFromButton(this, '${t}', '${langCode}', '${r}', 'slow')">🐢</button>
+    </span>
+  `;
 }
 
 // Lightweight toast notification

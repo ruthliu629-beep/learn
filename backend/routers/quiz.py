@@ -9,6 +9,7 @@ from database import get_db
 import models
 import schemas
 import auth
+import activity
 
 router = APIRouter(prefix="/api/quiz", tags=["quiz"])
 
@@ -98,5 +99,6 @@ def submit_quiz(
             progress.correct_count = max(0, progress.correct_count - 1)
             progress.next_review = now + timedelta(hours=1)
 
+    activity.mark_today(db, current_user.id)
     db.commit()
     return {"message": "Quiz submitted successfully", "score": data.score, "total": data.total}

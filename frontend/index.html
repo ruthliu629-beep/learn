@@ -26,30 +26,106 @@
   </header>
 
   <section class="hero">
-    <div class="container">
-      <h1 data-zh="探索世界语言 · 走近地方方言"
-          data-en="Explore World Languages · Embrace Regional Dialects">
-        探索世界语言 · 走近地方方言
+    <div class="hero-bg-decor" aria-hidden="true"></div>
+    <div class="hero-inner">
+      <div class="hero-badge">
+        <span data-zh="9 种语言 · 超 70 万词条 · 真人语音"
+              data-en="9 languages · 700K+ entries · Human-recorded voices">
+          9 种语言 · 超 70 万词条 · 真人语音
+        </span>
+      </div>
+
+      <h1 class="hero-title">
+        <span class="hero-title-main"
+              data-zh="探索世界语言" data-en="Explore World Languages">探索世界语言</span>
+        <span class="hero-title-sub"
+              data-zh="走近地方方言" data-en="Embrace Regional Dialects">走近地方方言</span>
       </h1>
-      <p data-zh="从普通话、粤语、闽南语到英语、日语、韩语、法语、西班牙语和德语 — 一个平台，全面掌握"
-         data-en="From Mandarin, Cantonese, and Hokkien to English, Japanese, Korean, French, Spanish, and German — one platform, all in one">
-        从普通话、粤语、闽南语到英语、日语、韩语、法语、西班牙语和德语 — 一个平台，全面掌握
+
+      <p class="hero-lead"
+         data-zh="从普通话到粤语、闽南语，从英日韩到法西德 — 一站掌握"
+         data-en="From Mandarin to Cantonese & Hokkien; English, Japanese, Korean, French, Spanish, German — all in one place.">
+        从普通话到粤语、闽南语，从英日韩到法西德 — 一站掌握
       </p>
+
+      <div class="hero-flags">
+        <span title="普通话">🇨🇳</span>
+        <span title="粤语">🇭🇰</span>
+        <span title="闽南语">🇹🇼</span>
+        <span title="English">🇬🇧</span>
+        <span title="日本語">🇯🇵</span>
+        <span title="한국어">🇰🇷</span>
+        <span title="Français">🇫🇷</span>
+        <span title="Español">🇪🇸</span>
+        <span title="Deutsch">🇩🇪</span>
+      </div>
+
+      <div class="hero-cta">
+        <button class="btn-primary btn-lg" onclick="document.querySelector('.languages-section').scrollIntoView({behavior:'smooth'})">
+          <span data-zh="立即开始 ↓" data-en="Start Learning ↓">立即开始 ↓</span>
+        </button>
+        <button class="btn-hero-ghost btn-lg" onclick="showAuthModal('login')">
+          <span data-zh="已有账号 → 登录" data-en="Already have an account?">已有账号 → 登录</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section class="features-strip">
+    <div class="container">
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">🔊</div>
+          <div class="feature-title" data-zh="真人语音" data-en="Human voices">真人语音</div>
+          <div class="feature-desc" data-zh="MOE · 粵典 · 神经 TTS"
+               data-en="MOE · words.hk · neural TTS">MOE · 粵典 · 神经 TTS</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📚</div>
+          <div class="feature-title" data-zh="海量词汇" data-en="Huge vocabulary">海量词汇</div>
+          <div class="feature-desc" data-zh="开源词典导入 · 精品例句"
+               data-en="Open dicts · curated examples">开源词典导入 · 精品例句</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🎯</div>
+          <div class="feature-title" data-zh="听说读写" data-en="4-skill tests">听说读写</div>
+          <div class="feature-desc" data-zh="语音识别 · 波形对比"
+               data-en="Speech recognition · waveform">语音识别 · 波形对比</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔥</div>
+          <div class="feature-title" data-zh="每日打卡" data-en="Daily streaks">每日打卡</div>
+          <div class="feature-desc" data-zh="连续学习 · 生词本导出"
+               data-en="Keep streak · export list">连续学习 · 生词本导出</div>
+        </div>
+      </div>
     </div>
   </section>
 
   <section class="languages-section">
     <div class="container">
-      <h2 data-zh="选择一门语言开始学习"
-          data-en="Choose a Language to Start">选择一门语言开始学习</h2>
+      <div class="section-heading">
+        <h2 data-zh="挑一门开始" data-en="Pick one to begin">挑一门开始</h2>
+        <p class="section-sub"
+           data-zh="点击任意语言即可进入学习；所有语言共用同一套词汇、测验、进度系统"
+           data-en="Click any language to start; shared vocab, tests, and progress across all.">
+          点击任意语言即可进入学习
+        </p>
+      </div>
 
-      <div class="dialects-group">
-        <h3 data-zh="中文方言" data-en="Chinese Dialects">中文方言</h3>
+      <div class="lang-group">
+        <div class="lang-group-title">
+          <span class="lang-group-icon">🀄</span>
+          <span data-zh="中文方言" data-en="Chinese Dialects">中文方言</span>
+        </div>
         <div class="language-grid" id="dialects-grid"></div>
       </div>
 
-      <div class="foreign-group">
-        <h3 data-zh="外语" data-en="Foreign Languages">外语</h3>
+      <div class="lang-group">
+        <div class="lang-group-title">
+          <span class="lang-group-icon">🌍</span>
+          <span data-zh="外语" data-en="Foreign Languages">外语</span>
+        </div>
         <div class="language-grid" id="foreign-grid"></div>
       </div>
     </div>
@@ -66,6 +142,9 @@
         <button class="modal-tab" id="tab-register" onclick="switchAuthTab('register')">
           <span data-zh="注册" data-en="Sign up">注册</span>
         </button>
+        <button class="modal-tab" id="tab-forgot" onclick="switchAuthTab('forgot')">
+          <span data-zh="忘记密码" data-en="Forgot">忘记密码</span>
+        </button>
       </div>
 
       <form id="login-form" onsubmit="handleLogin(event)">
@@ -81,6 +160,52 @@
         <button type="submit" class="btn-primary btn-full">
           <span data-zh="登录" data-en="Login">登录</span>
         </button>
+        <div style="text-align:center;margin-top:0.75rem">
+          <a href="#" onclick="switchAuthTab('forgot'); return false;" style="color:var(--text-muted);font-size:0.85rem;text-decoration:underline">
+            <span data-zh="忘记密码？" data-en="Forgot password?">忘记密码？</span>
+          </a>
+        </div>
+      </form>
+
+      <!-- Forgot password: step 1 (request code) and step 2 (enter code + new pw) -->
+      <form id="forgot-form" hidden onsubmit="handleForgotPassword(event)">
+        <div class="form-group">
+          <label data-zh="注册时使用的邮箱" data-en="Email on your account">注册时使用的邮箱</label>
+          <input type="email" id="forgot-email" required autocomplete="email">
+        </div>
+        <div class="form-error" id="forgot-error"></div>
+        <button type="submit" class="btn-primary btn-full">
+          <span data-zh="发送验证码" data-en="Send verification code">发送验证码</span>
+        </button>
+        <div style="text-align:center;margin-top:0.75rem">
+          <a href="#" onclick="switchAuthTab('login'); return false;" style="color:var(--text-muted);font-size:0.85rem;text-decoration:underline">
+            <span data-zh="返回登录" data-en="Back to login">返回登录</span>
+          </a>
+        </div>
+      </form>
+
+      <form id="reset-form" hidden onsubmit="handleResetPassword(event)">
+        <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:1rem">
+          <span id="reset-info" data-zh="验证码已发送到邮箱" data-en="A code has been sent to your email">验证码已发送到邮箱</span>
+          <strong id="reset-email-display"></strong>
+        </p>
+        <div class="form-group">
+          <label data-zh="6 位验证码" data-en="6-digit code">6 位验证码</label>
+          <input type="text" id="reset-code" required maxlength="6" pattern="[0-9]{6}" autocomplete="one-time-code" inputmode="numeric">
+        </div>
+        <div class="form-group">
+          <label data-zh="新密码（至少 6 位）" data-en="New password (min 6 chars)">新密码（至少 6 位）</label>
+          <input type="password" id="reset-password-new" required minlength="6" autocomplete="new-password">
+        </div>
+        <div class="form-error" id="reset-error"></div>
+        <button type="submit" class="btn-primary btn-full">
+          <span data-zh="重置密码" data-en="Reset password">重置密码</span>
+        </button>
+        <div style="text-align:center;margin-top:0.75rem">
+          <a href="#" onclick="switchAuthTab('forgot'); return false;" style="color:var(--text-muted);font-size:0.85rem;text-decoration:underline">
+            <span data-zh="重新发送" data-en="Resend code">重新发送</span>
+          </a>
+        </div>
       </form>
 
       <form id="register-form" hidden onsubmit="handleRegister(event)">

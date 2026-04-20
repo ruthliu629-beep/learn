@@ -25,9 +25,10 @@ desktop.ini
 # Logs
 *.log
 
-# Env / secrets
+# Env / secrets (NEVER commit credentials)
 .env
 .env.local
+start.bat
 
 # User-downloaded dictionary data (users fetch these themselves per DICT_IMPORT.md)
 *.gz

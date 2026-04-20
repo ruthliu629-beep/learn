@@ -6,7 +6,7 @@ from fastapi.responses import FileResponse
 
 from database import engine
 import models
-from routers import auth_router, languages, vocabulary, quiz, progress, cultural, tts
+from routers import auth_router, languages, vocabulary, quiz, progress, cultural, tts, favorites
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -27,6 +27,7 @@ app.include_router(quiz.router)
 app.include_router(progress.router)
 app.include_router(cultural.router)
 app.include_router(tts.router)
+app.include_router(favorites.router)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 FRONTEND_DIR = os.path.join(BASE_DIR, "..", "frontend")

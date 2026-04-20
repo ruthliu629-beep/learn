@@ -2,6 +2,7 @@
 from database import engine, SessionLocal
 import models
 from vocab_data import zh_cmn, zh_yue, zh_nan, en, ja, ko, fr, es, de
+from emoji_map import find_emoji
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -200,6 +201,7 @@ def seed():
                     meaning_zh=m_zh, meaning_en=m_en, category=cat,
                     example_native=ex_nat, example_romanization=ex_rom,
                     example_zh=ex_zh, example_en=ex_en,
+                    emoji=find_emoji(m_en, m_zh, cat),
                     source="curated",
                 ))
                 vocab_count += 1

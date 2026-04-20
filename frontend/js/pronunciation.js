@@ -1204,8 +1204,7 @@ async function loadPronunciation(lang) {
           <div class="pron-example">
             <div class="pron-example-top">
               <span class="pron-example-word">${escapeHtml(ex.word)}</span>
-              <button class="btn-speak btn-speak-sm" title="${uiLang === 'zh' ? '朗读' : 'Speak'}"
-                      onclick="speakFromButton(this, '${escapeAttr(ex.word)}', '${lang.code}', '${escapeAttr(ex.word || '')}')">🔊</button>
+              ${speakButtonsHTML(ex.word, lang.code, ex.word || '', { size: 'sm' })}
             </div>
             <div class="pron-example-meaning">${escapeHtml(ex.meaning)}</div>
           </div>

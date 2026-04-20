@@ -28,9 +28,24 @@ async function loadProgress() {
           `;
         }).join('');
 
+    const streakIcon = stats.current_streak >= 7 ? '🔥' : stats.current_streak >= 3 ? '✨' : '🌱';
+    const streakNote = stats.today_done
+      ? (uiLang === 'zh' ? '今日已打卡' : 'Checked in today')
+      : (uiLang === 'zh' ? '今天还没学习' : "Haven't studied today");
+
     panel.innerHTML = `
       <div class="panel-header">
         <h2>${uiLang === 'zh' ? '我的进度' : 'My Progress'}</h2>
+      </div>
+      <div class="streak-banner ${stats.today_done ? 'checked' : ''}">
+        <div class="streak-big">${streakIcon} ${stats.current_streak}</div>
+        <div class="streak-text">
+          <strong>${uiLang === 'zh' ? '连续学习' : 'Current streak'}</strong>
+          <span>${uiLang === 'zh' ? '天' : (stats.current_streak === 1 ? 'day' : 'days')}</span>
+        </div>
+        <div class="streak-sub">
+          ${streakNote} · ${uiLang === 'zh' ? '累计' : 'Total'} ${stats.total_days} ${uiLang === 'zh' ? '天' : 'days'}
+        </div>
       </div>
       <div class="stats-grid">
         <div class="stat-card">

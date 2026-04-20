@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, Boolean
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from database import Base
@@ -45,6 +45,7 @@ class VocabItem(Base):
     example_romanization = Column(Text)
     example_zh = Column(Text)
     example_en = Column(Text)
+    emoji = Column(String(16))  # Visual hint — matched from word meaning
     source = Column(String, default="curated", index=True)  # "curated" | "cc-cedict" | "jmdict" | etc.
 
     language = relationship("Language", back_populates="vocab_items")
@@ -75,6 +76,32 @@ class UserProgress(Base):
 
     user = relationship("User", back_populates="progress")
     vocab_item = relationship("VocabItem")
+
+
+class PasswordResetCode(Base):
+    __tablename__ = "password_reset_codes"
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String, nullable=False, index=True)
+    code = Column(String(6), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    expires_at = Column(DateTime, nullable=False)
+    used = Column(Boolean, default=False, index=True)
+
+
+class StudyDay(Base):
+    """One row per (user, calendar date) where the user did any learning activity."""
+    __tablename__ = "study_days"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    day = Column(String(10), nullable=False, index=True)  # YYYY-MM-DD
+
+
+class Favorite(Base):
+    __tablename__ = "favorites"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    vocab_id = Column(Integer, ForeignKey("vocab_items.id"), nullable=False, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
 
 class QuizSession(Base):

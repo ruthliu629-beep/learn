@@ -71,8 +71,9 @@ function renderQuiz() {
         <h3>${lang === 'zh' ? '这个词的意思是？' : 'What does this mean?'}</h3>
         <div class="quiz-word">${escapeHtml(q.word)}</div>
         ${q.romanization ? `<div class="quiz-rom">${escapeHtml(q.romanization)}</div>` : ''}
-        <button class="btn-speak" style="margin-top:1rem" title="${lang === 'zh' ? '朗读' : 'Speak'}"
-                onclick="speakFromButton(this, '${escapeAttr(q.word)}', '${quizState.langCode}')">🔊</button>
+        <div style="margin-top:1rem">
+          ${speakButtonsHTML(q.word, quizState.langCode, q.romanization || '', {})}
+        </div>
       </div>
       <div class="quiz-choices">${choicesHtml}</div>
     </div>

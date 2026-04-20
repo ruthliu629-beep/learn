@@ -14,6 +14,16 @@ class UserLogin(BaseModel):
     password: str
 
 
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+
+class ResetPasswordRequest(BaseModel):
+    email: str
+    code: str
+    new_password: str
+
+
 class Token(BaseModel):
     access_token: str
     token_type: str
@@ -47,6 +57,7 @@ class VocabItemOut(BaseModel):
     example_romanization: Optional[str] = None
     example_zh: Optional[str] = None
     example_en: Optional[str] = None
+    emoji: Optional[str] = None
     source: Optional[str] = None
 
     class Config:
@@ -119,3 +130,6 @@ class ProgressStats(BaseModel):
     due_count: int
     due_for_review: List[VocabItemOut]
     recent_sessions: List[QuizSessionOut]
+    current_streak: int = 0
+    total_days: int = 0
+    today_done: bool = False

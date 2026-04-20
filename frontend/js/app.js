@@ -26,6 +26,8 @@ async function initApp() {
     renderLangNav();
     updateLangDisplay();
     initUILang();
+    initAutoplay();
+    await loadFavoriteIds();
     switchTab('vocabulary');
   } catch (e) {
     console.error('Init failed:', e);
@@ -83,7 +85,12 @@ async function loadTabContent(tabName) {
     case 'pronunciation': await loadPronunciation(currentLang); break;
     case 'skills': await loadSkills(currentLang.id); break;
     case 'culture': await loadCulture(currentLang.id); break;
+    case 'favorites': await loadFavoritesPanel(); break;
     case 'progress': await loadProgress(); break;
+  }
+  // Stop autoplay when leaving vocab tab
+  if (tabName !== 'vocabulary' && typeof stopAutoplay === 'function' && autoplayState.enabled) {
+    stopAutoplay();
   }
 }
 

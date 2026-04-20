@@ -7,6 +7,7 @@ from database import get_db
 import models
 import schemas
 import auth
+import activity
 
 router = APIRouter(prefix="/api/progress", tags=["progress"])
 
@@ -60,6 +61,8 @@ def get_progress(
         .all()
     )
 
+    streak = activity.compute_streak(db, current_user.id)
+
     return {
         "total_vocab_current_lang": total_vocab_current,
         "mastered_current_lang": mastered_current,
@@ -69,6 +72,9 @@ def get_progress(
         "due_count": len(due_items),
         "due_for_review": due_items,
         "recent_sessions": recent,
+        "current_streak": streak["current_streak"],
+        "total_days": streak["total_days"],
+        "today_done": streak["today_done"],
     }
 
 
@@ -101,5 +107,6 @@ def record_review(
         progress.correct_count = max(0, progress.correct_count - 1)
         progress.next_review = now + timedelta(hours=1)
 
+    activity.mark_today(db, current_user.id)
     db.commit()
     return {"message": "Review recorded", "correct_count": progress.correct_count}

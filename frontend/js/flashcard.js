@@ -60,9 +60,9 @@ function renderFlashcard() {
       <div class="flashcard ${flashState.flipped ? 'flipped' : ''}" id="flashcard" onclick="flipCard()">
         <div class="flashcard-inner">
           <div class="flashcard-front">
+            ${item.emoji ? `<div class="flashcard-emoji">${item.emoji}</div>` : ''}
             <div class="flashcard-word">${escapeHtml(item.word)}</div>
-            <button class="btn-speak btn-speak-lg" title="${lang === 'zh' ? '朗读' : 'Speak'}"
-                    onclick="event.stopPropagation(); speakFromButton(this, '${escapeAttr(item.word)}', '${flashState.langCode}', '${escapeAttr(item.romanization || '')}')">🔊</button>
+            ${speakButtonsHTML(item.word, flashState.langCode, item.romanization || '', { size: 'lg', stopProp: true })}
             <div class="flashcard-hint">${lang === 'zh' ? '点击翻转卡片' : 'Tap card to flip'}</div>
           </div>
           <div class="flashcard-back">
@@ -73,13 +73,18 @@ function renderFlashcard() {
                 <div class="flashcard-example-native">${escapeHtml(item.example_native)}</div>
                 ${item.example_romanization ? `<div class="flashcard-example-rom">${escapeHtml(item.example_romanization)}</div>` : ''}
                 <div class="flashcard-example-trans">${escapeHtml(lang === 'zh' ? (item.example_zh || '') : (item.example_en || ''))}</div>
-                <button class="btn-speak-pill" title="${lang === 'zh' ? '播放例句' : 'Play example'}"
-                        onclick="event.stopPropagation(); speakFromButton(this, '${escapeAttr(item.example_native)}', '${flashState.langCode}', '${escapeAttr(item.example_romanization || '')}')">
-                  📢 <span>${lang === 'zh' ? '听例句' : 'Play example'}</span>
-                </button>
+                <div class="flashcard-example-actions">
+                  <button class="btn-speak-pill" title="${lang === 'zh' ? '口语语速' : 'Conversational speed'}"
+                          onclick="event.stopPropagation(); speakFromButton(this, '${escapeAttr(item.example_native)}', '${flashState.langCode}', '${escapeAttr(item.example_romanization || '')}', 'fast')">
+                    📢 <span>${lang === 'zh' ? '听例句' : 'Play example'}</span>
+                  </button>
+                  <button class="btn-speak-pill btn-speak-pill-slow" title="${lang === 'zh' ? '慢速朗读' : 'Slow'}"
+                          onclick="event.stopPropagation(); speakFromButton(this, '${escapeAttr(item.example_native)}', '${flashState.langCode}', '${escapeAttr(item.example_romanization || '')}', 'slow')">
+                    🐢 <span>${lang === 'zh' ? '慢速' : 'Slow'}</span>
+                  </button>
+                </div>
               </div>` : ''}
-            <button class="btn-speak btn-speak-lg" title="${lang === 'zh' ? '朗读词语' : 'Speak word'}"
-                    onclick="event.stopPropagation(); speakFromButton(this, '${escapeAttr(item.word)}', '${flashState.langCode}', '${escapeAttr(item.romanization || '')}')">🔊</button>
+            ${speakButtonsHTML(item.word, flashState.langCode, item.romanization || '', { size: 'lg', stopProp: true })}
           </div>
         </div>
       </div>
@@ -94,11 +99,11 @@ function renderFlashcard() {
     </div>
   `;
 
-  // Auto-speak the word when the card is shown
+  // Auto-speak the word (normal speed) when the card is shown
   setTimeout(() => {
-    const btn = panel.querySelector('.flashcard-front .btn-speak');
+    const btn = panel.querySelector('.flashcard-front .btn-speak:not(.btn-speak-slow)');
     if (btn && SPEECH_LOCALE[flashState.langCode]) {
-      speakFromButton(btn, item.word, flashState.langCode);
+      speakFromButton(btn, item.word, flashState.langCode, item.romanization || '', 'normal');
     }
   }, 150);
 }

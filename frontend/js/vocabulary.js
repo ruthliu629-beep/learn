@@ -87,23 +87,28 @@ function renderVocabulary() {
         const cl = CATEGORY_LABELS[v.category];
         const catLabel = cl ? `${cl.icon} ${cl[lang]}` : v.category;
         const ex_translation = lang === 'zh' ? v.example_zh : v.example_en;
-        const exampleLabel = lang === 'zh' ? '播放例句' : 'Play example';
         const exampleHtml = v.example_native ? `
           <div class="vocab-example">
             <div class="vocab-example-native">${escapeHtml(v.example_native)}</div>
             ${v.example_romanization ? `<div class="vocab-example-rom">${escapeHtml(v.example_romanization)}</div>` : ''}
             ${ex_translation ? `<div class="vocab-example-trans">${escapeHtml(ex_translation)}</div>` : ''}
-            <button class="btn-speak-pill" title="${exampleLabel}"
-                    onclick="speakFromButton(this, '${escapeAttr(v.example_native)}', '${vocabState.langCode}', '${escapeAttr(v.example_romanization || '')}')">
-              📢 <span>${lang === 'zh' ? '听例句' : 'Play example'}</span>
-            </button>
+            <div class="vocab-example-actions">
+              <button class="btn-speak-pill" title="${lang === 'zh' ? '口语语速' : 'Conversational speed'}"
+                      onclick="speakFromButton(this, '${escapeAttr(v.example_native)}', '${vocabState.langCode}', '${escapeAttr(v.example_romanization || '')}', 'fast')">
+                📢 <span>${lang === 'zh' ? '听例句' : 'Play example'}</span>
+              </button>
+              <button class="btn-speak-pill btn-speak-pill-slow" title="${lang === 'zh' ? '慢速朗读' : 'Slow'}"
+                      onclick="speakFromButton(this, '${escapeAttr(v.example_native)}', '${vocabState.langCode}', '${escapeAttr(v.example_romanization || '')}', 'slow')">
+                🐢 <span>${lang === 'zh' ? '慢速' : 'Slow'}</span>
+              </button>
+            </div>
           </div>
         ` : '';
-        const wordLabel = lang === 'zh' ? '朗读词语' : 'Speak word';
         return `
-          <div class="vocab-card">
-            <button class="btn-speak" title="${wordLabel}"
-                    onclick="speakFromButton(this, '${escapeAttr(v.word)}', '${vocabState.langCode}', '${escapeAttr(v.romanization || '')}')">🔊</button>
+          <div class="vocab-card" data-vocab-id="${v.id}">
+            ${favoriteButtonHTML(v.id)}
+            ${speakButtonsHTML(v.word, vocabState.langCode, v.romanization || '', { size: 'sm' })}
+            ${v.emoji ? `<div class="vocab-emoji">${v.emoji}</div>` : ''}
             <div class="vocab-word">${escapeHtml(v.word)}</div>
             ${v.romanization ? `<div class="vocab-rom">${escapeHtml(v.romanization)}</div>` : ''}
             <div class="vocab-meaning">${escapeHtml(meaning)}</div>
@@ -132,11 +137,13 @@ function renderVocabulary() {
              placeholder="${searchPh}" value="${escapeHtml(vocabState.search)}"
              oninput="onVocabSearch(event)">
     </div>
+    <div class="autoplay-bar" id="autoplay-controls"></div>
     <div class="filter-pills">${pills}</div>
     <div class="vocab-count">${totalNote}</div>
     <div class="vocab-grid">${cards}</div>
     ${moreBtn}
   `;
+  renderAutoplayControls();
 }
 
 function setVocabCategory(cat) {

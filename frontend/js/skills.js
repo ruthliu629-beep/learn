@@ -15,6 +15,7 @@ const skillsState = {
 const SKILL_META = {
   listen: { icon: '👂', zh: '听力测试', en: 'Listening' },
   speak:  { icon: '🎤', zh: '口语测试', en: 'Speaking'  },
+  shadow: { icon: '🔁', zh: '跟读对比', en: 'Shadow Speak' },
   read:   { icon: '📖', zh: '阅读测试', en: 'Reading'   },
   write:  { icon: '✍️', zh: '写作测试', en: 'Writing'   },
 };
@@ -70,6 +71,7 @@ function skillDescription(key, lang) {
   const D = {
     listen: { zh: '听词选意思 — 考听力', en: 'Hear the word, pick the meaning' },
     speak:  { zh: '开口读单词 — 考发音', en: 'Speak the word; we check pronunciation' },
+    shadow: { zh: '跟读并与原音波形对比', en: 'Record + compare waveform with original' },
     read:   { zh: '读拼音／音标还原文字', en: 'Read romanization, recall the word' },
     write:  { zh: '看意思，写出对应单词', en: 'See the meaning, type the word' },
   };
@@ -88,6 +90,7 @@ function startSkill(mode) {
 
   if (mode === 'listen') renderListen();
   else if (mode === 'speak') renderSpeak();
+  else if (mode === 'shadow') renderShadow();
   else if (mode === 'read') renderRead();
   else if (mode === 'write') renderWrite();
 }
@@ -167,6 +170,7 @@ function nextSkillQuestion() {
   } else {
     if (skillsState.mode === 'listen') renderListen();
     else if (skillsState.mode === 'speak') renderSpeak();
+    else if (skillsState.mode === 'shadow') renderShadow();
     else if (skillsState.mode === 'read') renderRead();
     else if (skillsState.mode === 'write') renderWrite();
   }
@@ -499,4 +503,207 @@ function compareWrite(guess, target) {
     .replace(/[、，。．,.!?！？'"'"：:；;\s]/g, '')
     .trim();
   return norm(guess) === norm(target);
+}
+
+
+// ============ 跟读对比 SHADOW SPEAKING ============
+// Shows original + user recording waveforms side by side.
+
+const shadowState = {
+  mediaStream: null,
+  recorder: null,
+  recording: false,
+  userBlob: null,
+  originalBuffer: null,
+  userBuffer: null,
+  audioCtx: null,
+};
+
+function _ensureAudioContext() {
+  if (!shadowState.audioCtx) {
+    shadowState.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  return shadowState.audioCtx;
+}
+
+async function renderShadow() {
+  const panel = document.getElementById('tab-skills');
+  const lang = getUILang();
+  const q = skillsState.queue[skillsState.index];
+
+  panel.innerHTML = `
+    ${skillHeader()}
+    <div class="quiz-container">
+      <div class="quiz-question">
+        <h3>${lang === 'zh' ? '跟着发音朗读，对比波形' : 'Read aloud and compare waveforms'}</h3>
+        <div class="quiz-word">${escapeHtml(q.word)}</div>
+        ${q.romanization ? `<div class="quiz-rom">${escapeHtml(q.romanization)}</div>` : ''}
+        <div class="shadow-actions">
+          <button class="btn-outline" onclick="shadowPlayOriginal()">
+            🔊 ${lang === 'zh' ? '播放原音' : 'Play original'}
+          </button>
+          <button class="btn-primary" id="btn-shadow-record" onclick="shadowToggleRecord()">
+            🎤 ${lang === 'zh' ? '开始录音' : 'Start recording'}
+          </button>
+          <button class="btn-outline" id="btn-shadow-playback" onclick="shadowPlayUser()" disabled>
+            ▶️ ${lang === 'zh' ? '回放我的' : 'Play mine'}
+          </button>
+        </div>
+        <div class="shadow-status" id="shadow-status"></div>
+
+        <div class="shadow-waves">
+          <div class="shadow-wave-row">
+            <div class="shadow-wave-label">${lang === 'zh' ? '原音' : 'Original'}</div>
+            <canvas id="wave-original" class="shadow-wave" width="800" height="80"></canvas>
+          </div>
+          <div class="shadow-wave-row">
+            <div class="shadow-wave-label">${lang === 'zh' ? '你的录音' : 'Your voice'}</div>
+            <canvas id="wave-user" class="shadow-wave" width="800" height="80"></canvas>
+          </div>
+        </div>
+
+        <div class="shadow-nav">
+          <button class="btn-outline" onclick="shadowSkip(false)">${lang === 'zh' ? '下一个（不计分）' : 'Next'}</button>
+          <button class="btn-primary" onclick="shadowSkip(true)">✓ ${lang === 'zh' ? '听起来对 · 下一个' : 'Sounds right · Next'}</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Reset state
+  shadowState.userBlob = null;
+  shadowState.userBuffer = null;
+  shadowState.originalBuffer = null;
+
+  // Fetch + draw original waveform
+  shadowFetchOriginal(q).catch(e => console.warn('shadow original fetch:', e));
+}
+
+async function shadowFetchOriginal(item) {
+  const status = document.getElementById('shadow-status');
+  const lang = getUILang();
+  status.textContent = lang === 'zh' ? '载入原音中…' : 'Loading original…';
+  const url = _shadowSourceURL(item, skillsState.langCode);
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const arr = await res.arrayBuffer();
+    const ctx = _ensureAudioContext();
+    const decoded = await ctx.decodeAudioData(arr.slice(0));
+    shadowState.originalBuffer = decoded;
+    _drawWaveform(document.getElementById('wave-original'), decoded, '#c0392b');
+    status.textContent = '';
+  } catch (e) {
+    status.textContent = (lang === 'zh' ? '原音波形不可用（Web Speech 无法抓取）：' : 'Original waveform unavailable: ') + (e.message || '');
+  }
+}
+
+function _shadowSourceURL(item, langCode) {
+  const text = encodeURIComponent(item.word);
+  if (langCode === 'zh-nan') return `/api/tts/nan?text=${text}`;
+  if (langCode === 'zh-yue' && item.romanization)
+    return `/api/tts/yue?jp=${encodeURIComponent(item.romanization)}`;
+  const tl = (GOOGLE_TTS_LANG[langCode] || langCode);
+  return `/api/tts/google?tl=${encodeURIComponent(tl)}&text=${text}`;
+}
+
+function shadowPlayOriginal() {
+  const q = skillsState.queue[skillsState.index];
+  speak(q.word, skillsState.langCode, { romanization: q.romanization, speed: 'normal' });
+}
+
+function shadowPlayUser() {
+  if (!shadowState.userBlob) return;
+  const audio = new Audio(URL.createObjectURL(shadowState.userBlob));
+  audio.play();
+}
+
+async function shadowToggleRecord() {
+  const btn = document.getElementById('btn-shadow-record');
+  const status = document.getElementById('shadow-status');
+  const lang = getUILang();
+
+  if (shadowState.recording) {
+    shadowState.recorder.stop();
+    return;
+  }
+
+  try {
+    if (!shadowState.mediaStream) {
+      shadowState.mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    }
+    const chunks = [];
+    const mime = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : '';
+    const rec = new MediaRecorder(shadowState.mediaStream, mime ? { mimeType: mime } : undefined);
+    shadowState.recorder = rec;
+    rec.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
+    rec.onstop = async () => {
+      shadowState.recording = false;
+      btn.classList.remove('recording');
+      btn.innerHTML = `🎤 ${lang === 'zh' ? '重新录音' : 'Record again'}`;
+      const blob = new Blob(chunks, { type: rec.mimeType || 'audio/webm' });
+      shadowState.userBlob = blob;
+      document.getElementById('btn-shadow-playback').disabled = false;
+      status.textContent = lang === 'zh' ? '处理波形中…' : 'Processing waveform…';
+      try {
+        const arr = await blob.arrayBuffer();
+        const decoded = await _ensureAudioContext().decodeAudioData(arr.slice(0));
+        shadowState.userBuffer = decoded;
+        _drawWaveform(document.getElementById('wave-user'), decoded, '#f39c12');
+        status.textContent = lang === 'zh' ? '✓ 录制完成，可对比波形' : '✓ Done — compare the waveforms';
+      } catch (e) {
+        status.textContent = (lang === 'zh' ? '解码失败: ' : 'Decode failed: ') + e.message;
+      }
+    };
+    rec.start();
+    shadowState.recording = true;
+    btn.classList.add('recording');
+    btn.innerHTML = `⏺ ${lang === 'zh' ? '录音中…点击停止' : 'Recording… tap to stop'}`;
+    status.textContent = lang === 'zh' ? '清晰地朗读' : 'Speak clearly';
+  } catch (e) {
+    status.textContent = (lang === 'zh' ? '无法访问麦克风: ' : 'Microphone error: ') + e.message;
+  }
+}
+
+function _drawWaveform(canvas, audioBuffer, color) {
+  if (!canvas || !audioBuffer) return;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+
+  // Background + centerline
+  ctx.fillStyle = '#f8f5f0';
+  ctx.fillRect(0, 0, w, h);
+  ctx.strokeStyle = '#ddd';
+  ctx.beginPath();
+  ctx.moveTo(0, h / 2);
+  ctx.lineTo(w, h / 2);
+  ctx.stroke();
+
+  const data = audioBuffer.getChannelData(0);
+  const step = Math.max(1, Math.floor(data.length / w));
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (let x = 0; x < w; x++) {
+    let min = 1.0, max = -1.0;
+    const s = x * step;
+    const end = Math.min(s + step, data.length);
+    for (let i = s; i < end; i++) {
+      const v = data[i];
+      if (v < min) min = v;
+      if (v > max) max = v;
+    }
+    ctx.moveTo(x + 0.5, (1 - max) * h / 2);
+    ctx.lineTo(x + 0.5, (1 - min) * h / 2);
+  }
+  ctx.stroke();
+}
+
+function shadowSkip(counted) {
+  if (counted) skillsState.correct++;
+  if (shadowState.recorder && shadowState.recording) {
+    try { shadowState.recorder.stop(); } catch (e) {}
+  }
+  nextSkillQuestion();
 }
