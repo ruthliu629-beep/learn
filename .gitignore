@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Database (regenerated via seed_data.py / import_dict.py)
+backend/langlearn.db
+*.sqlite3
+*.sqlite
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Logs
+*.log
+
+# Env / secrets
+.env
+.env.local
+
+# User-downloaded dictionary data (users fetch these themselves per DICT_IMPORT.md)
+*.gz
+*.zip
+cedict_ts.u8
+JMdict_e
+cccanto-webdist.txt
+kengdic*.tsv
+stardict.db
+*-extract.jsonl
+dict-twblg*.json

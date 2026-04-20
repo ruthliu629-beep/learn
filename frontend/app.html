@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LangLearn App</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="container">
+      <a href="/" class="logo">
+        <span class="logo-icon">🌏</span>
+        <span class="logo-text">LangLearn</span>
+      </a>
+      <div id="lang-display"></div>
+      <div class="header-right">
+        <button class="btn-text ui-lang-toggle" onclick="toggleUILang()">EN</button>
+        <span class="username" id="username-display"></span>
+        <button class="btn-text" onclick="auth.logout()">
+          <span data-zh="退出" data-en="Logout">退出</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <nav class="lang-nav">
+    <div class="lang-nav-inner" id="lang-nav-inner"></div>
+  </nav>
+
+  <nav class="tab-nav">
+    <div class="tab-nav-inner">
+      <button class="tab-btn active" data-tab="vocabulary" onclick="switchTab('vocabulary')">
+        <span data-zh="词汇" data-en="Vocabulary">词汇</span>
+      </button>
+      <button class="tab-btn" data-tab="flashcard" onclick="switchTab('flashcard')">
+        <span data-zh="闪卡" data-en="Flashcards">闪卡</span>
+      </button>
+      <button class="tab-btn" data-tab="quiz" onclick="switchTab('quiz')">
+        <span data-zh="测验" data-en="Quiz">测验</span>
+      </button>
+      <button class="tab-btn" data-tab="pronunciation" onclick="switchTab('pronunciation')">
+        <span data-zh="发音" data-en="Pronunciation">发音</span>
+      </button>
+      <button class="tab-btn" data-tab="skills" onclick="switchTab('skills')">
+        <span data-zh="听说读写" data-en="Skills Test">听说读写</span>
+      </button>
+      <button class="tab-btn" data-tab="culture" onclick="switchTab('culture')">
+        <span data-zh="文化" data-en="Culture">文化</span>
+      </button>
+      <button class="tab-btn" data-tab="progress" onclick="switchTab('progress')">
+        <span data-zh="进度" data-en="Progress">进度</span>
+      </button>
+    </div>
+  </nav>
+
+  <main class="tab-content">
+    <div id="tab-vocabulary" class="tab-panel"></div>
+    <div id="tab-flashcard" class="tab-panel" hidden></div>
+    <div id="tab-quiz" class="tab-panel" hidden></div>
+    <div id="tab-pronunciation" class="tab-panel" hidden></div>
+    <div id="tab-skills" class="tab-panel" hidden></div>
+    <div id="tab-culture" class="tab-panel" hidden></div>
+    <div id="tab-progress" class="tab-panel" hidden></div>
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/vocabulary.js"></script>
+  <script src="/js/flashcard.js"></script>
+  <script src="/js/quiz.js"></script>
+  <script src="/js/pronunciation.js"></script>
+  <script src="/js/skills.js"></script>
+  <script src="/js/cultural.js"></script>
+  <script src="/js/progress.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>

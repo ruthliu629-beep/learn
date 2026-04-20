@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LangLearn · 多语言学习平台</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="main-header">
+    <div class="container">
+      <a href="/" class="logo">
+        <span class="logo-icon">🌏</span>
+        <span class="logo-text">LangLearn</span>
+      </a>
+      <div class="header-controls">
+        <button class="btn-text ui-lang-toggle" onclick="toggleUILang()">EN</button>
+        <button class="btn-outline" onclick="showAuthModal('login')">
+          <span data-zh="登录" data-en="Login">登录</span>
+        </button>
+        <button class="btn-primary" onclick="showAuthModal('register')">
+          <span data-zh="注册" data-en="Sign up">注册</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="container">
+      <h1 data-zh="探索世界语言 · 走近地方方言"
+          data-en="Explore World Languages · Embrace Regional Dialects">
+        探索世界语言 · 走近地方方言
+      </h1>
+      <p data-zh="从普通话、粤语、闽南语到英语、日语、韩语、法语、西班牙语和德语 — 一个平台，全面掌握"
+         data-en="From Mandarin, Cantonese, and Hokkien to English, Japanese, Korean, French, Spanish, and German — one platform, all in one">
+        从普通话、粤语、闽南语到英语、日语、韩语、法语、西班牙语和德语 — 一个平台，全面掌握
+      </p>
+    </div>
+  </section>
+
+  <section class="languages-section">
+    <div class="container">
+      <h2 data-zh="选择一门语言开始学习"
+          data-en="Choose a Language to Start">选择一门语言开始学习</h2>
+
+      <div class="dialects-group">
+        <h3 data-zh="中文方言" data-en="Chinese Dialects">中文方言</h3>
+        <div class="language-grid" id="dialects-grid"></div>
+      </div>
+
+      <div class="foreign-group">
+        <h3 data-zh="外语" data-en="Foreign Languages">外语</h3>
+        <div class="language-grid" id="foreign-grid"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Auth Modal -->
+  <div class="modal-overlay" id="auth-modal" hidden>
+    <div class="modal">
+      <button class="modal-close" onclick="hideAuthModal()">×</button>
+      <div class="modal-tabs">
+        <button class="modal-tab active" id="tab-login" onclick="switchAuthTab('login')">
+          <span data-zh="登录" data-en="Login">登录</span>
+        </button>
+        <button class="modal-tab" id="tab-register" onclick="switchAuthTab('register')">
+          <span data-zh="注册" data-en="Sign up">注册</span>
+        </button>
+      </div>
+
+      <form id="login-form" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label data-zh="用户名" data-en="Username">用户名</label>
+          <input type="text" id="login-username" required autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label data-zh="密码" data-en="Password">密码</label>
+          <input type="password" id="login-password" required autocomplete="current-password">
+        </div>
+        <div class="form-error" id="login-error"></div>
+        <button type="submit" class="btn-primary btn-full">
+          <span data-zh="登录" data-en="Login">登录</span>
+        </button>
+      </form>
+
+      <form id="register-form" hidden onsubmit="handleRegister(event)">
+        <div class="form-group">
+          <label data-zh="用户名（至少 3 位）" data-en="Username (min 3 chars)">用户名（至少 3 位）</label>
+          <input type="text" id="reg-username" required minlength="3" autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label data-zh="邮箱" data-en="Email">邮箱</label>
+          <input type="email" id="reg-email" required autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label data-zh="密码（至少 6 位）" data-en="Password (min 6 chars)">密码（至少 6 位）</label>
+          <input type="password" id="reg-password" required minlength="6" autocomplete="new-password">
+        </div>
+        <div class="form-error" id="reg-error"></div>
+        <button type="submit" class="btn-primary btn-full">
+          <span data-zh="创建账户" data-en="Create account">创建账户</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <footer style="text-align:center;padding:2rem;color:var(--text-muted);font-size:0.9rem">
+    <span data-zh="© 2026 LangLearn · 多语言学习平台"
+          data-en="© 2026 LangLearn · Multilingual Learning Platform">
+      © 2026 LangLearn · 多语言学习平台
+    </span>
+  </footer>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script>
+    let pendingLangId = null;
+
+    async function loadLanguages() {
+      try {
+        const langs = await api.get('/api/languages/');
+        const dialects = langs.filter(l => l.type === 'dialect');
+        const foreign = langs.filter(l => l.type === 'foreign');
+        renderGrid('dialects-grid', dialects);
+        renderGrid('foreign-grid', foreign);
+      } catch (e) {
+        console.error('Load languages failed:', e);
+      }
+    }
+
+    function renderGrid(id, langs) {
+      const container = document.getElementById(id);
+      container.innerHTML = langs.map(l => `
+        <div class="language-card" onclick="selectLanguage(${l.id})">
+          <span class="lang-flag">${l.flag}</span>
+          <span class="lang-name-zh">${l.name_zh}</span>
+          <span class="lang-name-en">${l.name_en}</span>
+          <span class="lang-rom">${l.romanization_system || ''}</span>
+        </div>
+      `).join('');
+    }
+
+    function selectLanguage(langId) {
+      pendingLangId = langId;
+      if (auth.isLoggedIn()) {
+        localStorage.setItem('selected_lang_id', langId);
+        window.location.href = '/app';
+      } else {
+        showAuthModal('login');
+      }
+    }
+
+    window.onAuthSuccess = function () {
+      if (pendingLangId) localStorage.setItem('selected_lang_id', pendingLangId);
+      window.location.href = '/app';
+    };
+
+    (async () => {
+      await ensureNativeLanguage();
+      initUILang();
+      loadLanguages();
+    })();
+  </script>
+</body>
+</html>
