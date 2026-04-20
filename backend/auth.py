@@ -1,3 +1,5 @@
+import os
+import secrets
 from datetime import datetime, timedelta
 from typing import Optional
 from jose import JWTError, jwt
@@ -9,7 +11,10 @@ from sqlalchemy.orm import Session
 from database import get_db
 import models
 
-SECRET_KEY = "change-me-in-production-please-use-env-variable"
+# JWT signing key — set SECRET_KEY env var in production (Render dashboard etc).
+# If absent, generate an ephemeral one so the app still boots, but tokens
+# won't survive a restart (which is fine for dev, not for prod).
+SECRET_KEY = os.getenv("SECRET_KEY") or secrets.token_urlsafe(48)
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 1 week
 

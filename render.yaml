@@ -1,0 +1,31 @@
+# Render.com deployment config.
+# Creates one web service. Set DATABASE_URL (and optionally SECRET_KEY, SMTP_*)
+# via the Render dashboard → Environment tab.
+services:
+  - type: web
+    name: langlearn
+    runtime: python
+    region: singapore          # change if you're far from Asia
+    plan: free                 # upgrade later for more CPU/RAM
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: cd backend && python -m uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/languages/
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.6
+      - key: SECRET_KEY
+        generateValue: true    # Render auto-generates a strong random value
+      # Paste your Neon Postgres URL in the Render dashboard; keep it secret.
+      - key: DATABASE_URL
+        sync: false
+      # Optional — set these if you want password-reset emails to actually send
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: SMTP_FROM
+        sync: false

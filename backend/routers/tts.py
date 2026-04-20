@@ -32,9 +32,11 @@ _MOE_WORD_TO_ID: Dict[str, str] = {}
 
 def _try_load_moe_map():
     """Build a word→entry-id map from the MOE JSON so we can construct audio URLs."""
+    _backend = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     candidates = [
+        os.environ.get("MOE_JSON_PATH", ""),
+        os.path.join(_backend, "data", "dict-twblg.json"),
         r"C:\Users\悦\Downloads\dict_extracted\moedict\moedict-data-twblg-master\dict-twblg.json",
-        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "dict-twblg.json"),
     ]
     for path in candidates:
         if not os.path.exists(path):

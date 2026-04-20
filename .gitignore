@@ -39,4 +39,6 @@ cccanto-webdist.txt
 kengdic*.tsv
 stardict.db
 *-extract.jsonl
+# Exclude user's local dict-twblg copies, but keep the one we ship in backend/data/
 dict-twblg*.json
+!backend/data/dict-twblg.json
