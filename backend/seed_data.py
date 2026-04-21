@@ -1,7 +1,7 @@
 """Seed the database with languages, curated vocabulary (with examples), and cultural notes."""
 from database import engine, SessionLocal
 import models
-from vocab_data import zh_cmn, zh_yue, zh_nan, en, ja, ko, fr, es, de
+from vocab_data import zh_cmn, zh_yue, en, ja, ko, fr, es, de
 from emoji_map import find_emoji
 
 models.Base.metadata.create_all(bind=engine)
@@ -15,10 +15,6 @@ LANGUAGES = [
      "romanization_system": "Jyutping (粤拼)",
      "description_zh": "流行于广东、香港、澳门及海外华人社区，保留大量古汉语声调。",
      "description_en": "Spoken in Guangdong, Hong Kong, Macau, and overseas Chinese communities."},
-    {"code": "zh-nan", "name_zh": "闽南语", "name_en": "Hokkien", "flag": "🇹🇼", "type": "dialect",
-     "romanization_system": "Pe̍h-ōe-jī (白话字)",
-     "description_zh": "主要分布于福建南部、台湾及东南亚华人社区，台语的基础。",
-     "description_en": "Widely spoken in southern Fujian, Taiwan, and Southeast Asian Chinese communities."},
     {"code": "en", "name_zh": "英语", "name_en": "English", "flag": "🇬🇧", "type": "foreign",
      "romanization_system": "IPA",
      "description_zh": "全球最广泛使用的国际语言。",
@@ -48,7 +44,6 @@ LANGUAGES = [
 VOCAB_MODULES = {
     "zh-cmn": zh_cmn.VOCAB,
     "zh-yue": zh_yue.VOCAB,
-    "zh-nan": zh_nan.VOCAB,
     "en": en.VOCAB,
     "ja": ja.VOCAB,
     "ko": ko.VOCAB,
@@ -85,20 +80,6 @@ CULTURAL = {
          "茶餐厅是香港特色平价餐馆，融合中西——丝袜奶茶、菠萝包、干炒牛河是代表。",
          "Cha chaan teng are Hong Kong diners blending East and West cuisines.",
          "香港"),
-    ],
-    "zh-nan": [
-        ("文白异读", "Literary vs. Colloquial",
-         "闽南语一个汉字常有文读和白读两套发音，如「人」读 jîn（文）或 lâng（白）。",
-         "In Hokkien, characters often have literary and colloquial readings (e.g., 人 jîn/lâng).",
-         "福建／台湾"),
-        ("东南亚华人的纽带", "Southeast Asian Diaspora",
-         "闽南语是新加坡、马来西亚、菲律宾、印尼华人的重要方言。马来语 teh 即借自闽南。",
-         "Hokkien links Chinese diaspora across Southeast Asia. Malay 'teh' (tea) is a Hokkien loan.",
-         "东南亚"),
-        ("台语歌谣传统", "Taiwanese Song",
-         "闽南语在台湾孕育出台语流行乐、布袋戏、歌仔戏，是台湾文化的基石。",
-         "Hokkien bred Taiwanese pop, glove puppetry, and opera — pillars of Taiwanese culture.",
-         "台湾"),
     ],
     "en": [
         ("英语方言多样", "English Dialects",
