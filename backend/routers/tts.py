@@ -4,6 +4,7 @@ import json
 import os
 import urllib.parse
 from concurrent.futures import ThreadPoolExecutor
+from threading import Lock
 from typing import Dict, Optional
 import requests
 from fastapi import APIRouter, HTTPException, Query
@@ -26,12 +27,18 @@ router = APIRouter(prefix="/api/tts", tags=["tts"])
 
 UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
-# Load MOE word→id map at import time (one-time, ~14K entries)
+# Load MOE word→id map lazily. The JSON is several MB, so doing this at import
+# time makes cold starts and first login slower even when users never play Min Nan.
 _MOE_WORD_TO_ID: Dict[str, str] = {}
+_MOE_MAP_LOADED = False
+_MOE_MAP_LOCK = Lock()
 
 
 def _try_load_moe_map():
     """Build a word→entry-id map from the MOE JSON so we can construct audio URLs."""
+    global _MOE_MAP_LOADED
+    if _MOE_MAP_LOADED:
+        return
     _backend = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     candidates = [
         os.environ.get("MOE_JSON_PATH", ""),
@@ -53,13 +60,20 @@ def _try_load_moe_map():
                 if eid and title not in _MOE_WORD_TO_ID:
                     _MOE_WORD_TO_ID[title] = eid
             print(f"[tts] Loaded MOE map: {len(_MOE_WORD_TO_ID)} entries from {path}")
+            _MOE_MAP_LOADED = True
             return
         except Exception as e:
             print(f"[tts] Failed to load {path}: {e}")
     print("[tts] No MOE map loaded — Min Nan audio will fall back to Google")
+    _MOE_MAP_LOADED = True
 
 
-_try_load_moe_map()
+def _ensure_moe_map_loaded():
+    if _MOE_MAP_LOADED:
+        return
+    with _MOE_MAP_LOCK:
+        if not _MOE_MAP_LOADED:
+            _try_load_moe_map()
 
 
 def _fetch(url: str, referer: Optional[str] = None, timeout: int = 10) -> bytes:
@@ -205,6 +219,7 @@ _MOE_MAX_TITLE_LEN = 12  # longest MOE entries are ~8-10 chars
 def _segment_moe(text: str):
     """Greedy longest-match segmentation. Returns list of (piece, id_or_None).
     Pieces with no MOE match get id=None and will be skipped for audio."""
+    _ensure_moe_map_loaded()
     # Strip obvious punctuation but preserve structure
     text = text.strip()
     segments = []
@@ -275,5 +290,4 @@ def tts_nan(text: str = Query(..., min_length=1, max_length=200)):
             "Cache-Control": "public, max-age=86400",
         },
     )
-
 
