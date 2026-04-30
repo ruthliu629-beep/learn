@@ -28,7 +28,7 @@ async function handleLogin(event) {
   errorEl.textContent = '';
 
   if (!username || !password) {
-    errorEl.textContent = getUILang() === 'zh' ? '请填写用户名和密码' : 'Please enter both fields';
+    errorEl.textContent = getUILang() === 'zh' ? '请填写用户名/邮箱和密码' : 'Please enter both fields';
     return;
   }
 
@@ -45,7 +45,7 @@ async function handleLogin(event) {
     const msg = (e && e.message) || '';
     const zh = getUILang() === 'zh';
     if (msg.toLowerCase().includes('incorrect')) {
-      errorEl.textContent = zh ? '用户名或密码错误' : 'Incorrect username or password';
+      errorEl.textContent = zh ? '用户名/邮箱或密码错误' : 'Incorrect username/email or password';
     } else if (msg.toLowerCase().includes('failed to fetch') || msg === 'Request failed') {
       errorEl.textContent = zh ? '无法连接服务器，请检查后端是否运行' : 'Cannot reach server — is the backend running?';
     } else {
@@ -149,9 +149,8 @@ async function handleResetPassword(event) {
     await api.post('/api/auth/reset-password', { email, code, new_password: newPassword });
     alert(zh ? '密码重置成功！请用新密码登录。' : 'Password reset! Please log in with the new password.');
     // Pre-fill login form
-    const emailLocalPart = email.split('@')[0];
     const loginUsernameEl = document.getElementById('login-username');
-    if (loginUsernameEl && !loginUsernameEl.value) loginUsernameEl.value = emailLocalPart;
+    if (loginUsernameEl && !loginUsernameEl.value) loginUsernameEl.value = email;
     switchAuthTab('login');
   } catch (e) {
     errorEl.textContent = e.message || (zh ? '重置失败' : 'Reset failed');

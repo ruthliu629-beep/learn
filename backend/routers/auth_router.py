@@ -2,6 +2,7 @@ import os
 import random
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from database import get_db
@@ -15,18 +16,20 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 @router.post("/register", response_model=schemas.Token)
 def register(user_data: schemas.UserCreate, db: Session = Depends(get_db)):
-    if len(user_data.username) < 3:
+    username = user_data.username.strip()
+    email = user_data.email.strip().lower()
+    if len(username) < 3:
         raise HTTPException(status_code=400, detail="Username must be at least 3 characters")
     if len(user_data.password) < 6:
         raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
-    if db.query(models.User).filter(models.User.username == user_data.username).first():
+    if db.query(models.User).filter(models.User.username == username).first():
         raise HTTPException(status_code=400, detail="Username already taken")
-    if db.query(models.User).filter(models.User.email == user_data.email).first():
+    if db.query(models.User).filter(models.User.email == email).first():
         raise HTTPException(status_code=400, detail="Email already registered")
 
     user = models.User(
-        username=user_data.username,
-        email=user_data.email,
+        username=username,
+        email=email,
         hashed_password=auth.get_password_hash(user_data.password),
     )
     db.add(user)
@@ -39,7 +42,12 @@ def register(user_data: schemas.UserCreate, db: Session = Depends(get_db)):
 
 @router.post("/login", response_model=schemas.Token)
 def login(credentials: schemas.UserLogin, db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.username == credentials.username).first()
+    login_id = credentials.username.strip()
+    user = (
+        db.query(models.User)
+        .filter(or_(models.User.username == login_id, models.User.email == login_id.lower()))
+        .first()
+    )
     if not user or not auth.verify_password(credentials.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
