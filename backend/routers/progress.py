@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, Query
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from typing import Optional
 
@@ -24,9 +25,16 @@ def get_progress(
         .all()
     )
 
-    total_attempts = sum(p.attempt_count for p in all_progress)
-    total_correct = sum(p.correct_count for p in all_progress)
-    accuracy = (total_correct / total_attempts * 100) if total_attempts else 0.0
+    quiz_correct, quiz_total = (
+        db.query(
+            func.coalesce(func.sum(models.QuizSession.score), 0),
+            func.coalesce(func.sum(models.QuizSession.total), 0),
+        )
+        .filter(models.QuizSession.user_id == current_user.id)
+        .one()
+    )
+    total_attempts = int(quiz_total or sum(p.attempt_count for p in all_progress))
+    accuracy = (float(quiz_correct) / float(quiz_total) * 100) if quiz_total else 0.0
 
     total_mastered_all = sum(1 for p in all_progress if p.correct_count >= 3)
 

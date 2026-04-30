@@ -4,11 +4,26 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
-from database import engine
+from database import engine, SessionLocal
 import models
 from routers import auth_router, languages, vocabulary, quiz, progress, cultural, tts, favorites
 
 models.Base.metadata.create_all(bind=engine)
+
+
+def seed_database_if_empty():
+    db = SessionLocal()
+    try:
+        if db.query(models.Language).count() > 0:
+            return
+    finally:
+        db.close()
+
+    from seed_data import seed
+    seed()
+
+
+seed_database_if_empty()
 
 app = FastAPI(title="LangLearn API", version="1.0.0", description="多语言学习平台 API")
 

@@ -19,7 +19,9 @@ if _db_url:
     SQLALCHEMY_DATABASE_URL = _db_url
     engine = create_engine(_db_url, pool_pre_ping=True, pool_size=5, max_overflow=10)
 else:
-    SQLALCHEMY_DATABASE_URL = "sqlite:///./langlearn.db"
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    db_path = os.path.join(BASE_DIR, "langlearn.db")
+    SQLALCHEMY_DATABASE_URL = f"sqlite:///{db_path}"
     engine = create_engine(
         SQLALCHEMY_DATABASE_URL,
         connect_args={"check_same_thread": False},

@@ -1,3 +1,4 @@
+import os
 import random
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -55,6 +56,7 @@ def read_current_user(current_user: models.User = Depends(auth.get_current_user)
 
 # ============ FORGOT PASSWORD FLOW ============
 CODE_EXPIRY_MIN = 30  # minutes a reset code is valid
+ALLOW_DEV_RESET_CODE = os.getenv("ALLOW_DEV_RESET_CODE", "").lower() in {"1", "true", "yes"}
 
 
 @router.post("/forgot-password")
@@ -90,10 +92,12 @@ def forgot_password(req: schemas.ForgotPasswordRequest, db: Session = Depends(ge
     )
     ok, detail = send_email(email, subject, body)
 
-    # If SMTP isn't configured, return the code so dev/local use still works.
-    if not smtp_configured():
+    # Local-only escape hatch for development. Do not enable this in production.
+    if not smtp_configured() and ALLOW_DEV_RESET_CODE:
         response["dev_code"] = code
         response["dev_note"] = "SMTP not configured — code printed to server console. Set SMTP_* env vars for real email delivery."
+    elif not ok:
+        response["email_sent"] = False
 
     return response
 

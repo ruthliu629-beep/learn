@@ -17,10 +17,14 @@ router = APIRouter(prefix="/api/quiz", tags=["quiz"])
 @router.get("/{lang_id}", response_model=List[schemas.QuizQuestion])
 def generate_quiz(lang_id: int, count: int = 10, db: Session = Depends(get_db)):
     count = min(max(count, 4), 50)
-    # Random selection via SQL (fast on 100K+ rows; avoids loading everything)
+    base_query = db.query(models.VocabItem).filter(models.VocabItem.language_id == lang_id)
+    curated_query = base_query.filter(models.VocabItem.source == "curated")
+    question_query = curated_query if curated_query.count() >= 4 else base_query
+
+    # Random selection via SQL (fast on 100K+ rows; avoids loading everything).
+    # Prefer curated entries so first-time quizzes feel useful instead of dictionary-random.
     quiz_items = (
-        db.query(models.VocabItem)
-        .filter(models.VocabItem.language_id == lang_id)
+        question_query
         .order_by(func.random())
         .limit(count)
         .all()
@@ -30,12 +34,18 @@ def generate_quiz(lang_id: int, count: int = 10, db: Session = Depends(get_db)):
 
     # Fetch just enough distractors (3 per question) with one random query
     distractor_pool = (
-        db.query(models.VocabItem)
-        .filter(models.VocabItem.language_id == lang_id)
+        question_query
         .order_by(func.random())
-        .limit(count * 5)
+        .limit(max(count * 6, 24))
         .all()
     )
+    if len(distractor_pool) < 4:
+        distractor_pool = (
+            base_query
+            .order_by(func.random())
+            .limit(max(count * 6, 24))
+            .all()
+        )
     questions = []
 
     for item in quiz_items:
