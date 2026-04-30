@@ -7,8 +7,8 @@ services:
     runtime: python
     region: singapore          # change if you're far from Asia
     plan: free                 # upgrade later for more CPU/RAM
-    buildCommand: pip install -r backend/requirements.txt
-    startCommand: cd backend && python -m uvicorn main:app --host 0.0.0.0 --port $PORT
+    buildCommand: pip install -r requirements.txt
+    startCommand: python start.py
     healthCheckPath: /api/languages/
     envVars:
       - key: PYTHON_VERSION
