@@ -36,6 +36,9 @@
       <button class="tab-btn" data-tab="flashcard" onclick="switchTab('flashcard')">
         <span data-zh="闪卡" data-en="Flashcards">闪卡</span>
       </button>
+      <button class="tab-btn" data-tab="memory" onclick="switchTab('memory')">
+        <span data-zh="速记" data-en="Quick Memory">速记</span>
+      </button>
       <button class="tab-btn" data-tab="quiz" onclick="switchTab('quiz')">
         <span data-zh="测验" data-en="Quiz">测验</span>
       </button>
@@ -60,6 +63,7 @@
   <main class="tab-content">
     <div id="tab-vocabulary" class="tab-panel"></div>
     <div id="tab-flashcard" class="tab-panel" hidden></div>
+    <div id="tab-memory" class="tab-panel" hidden></div>
     <div id="tab-quiz" class="tab-panel" hidden></div>
     <div id="tab-pronunciation" class="tab-panel" hidden></div>
     <div id="tab-skills" class="tab-panel" hidden></div>
@@ -72,6 +76,7 @@
   <script src="/js/auth.js"></script>
   <script src="/js/vocabulary.js"></script>
   <script src="/js/flashcard.js"></script>
+  <script src="/js/memory.js"></script>
   <script src="/js/quiz.js"></script>
   <script src="/js/pronunciation.js"></script>
   <script src="/js/skills.js"></script>

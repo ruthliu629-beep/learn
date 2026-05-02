@@ -81,6 +81,7 @@ async function loadTabContent(tabName) {
   switch (tabName) {
     case 'vocabulary': await loadVocabulary(currentLang.id); break;
     case 'flashcard': await loadFlashcards(currentLang.id); break;
+    case 'memory': await loadMemoryMode(currentLang.id); break;
     case 'quiz': await loadQuiz(currentLang.id); break;
     case 'pronunciation': await loadPronunciation(currentLang); break;
     case 'skills': await loadSkills(currentLang.id); break;
